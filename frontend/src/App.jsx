@@ -1,5 +1,22 @@
 import { useState } from 'react';
 
+const PRIORITIES = ['high', 'medium', 'low'];
+
+function isValidTask(task) {
+  return Boolean(
+    task &&
+    typeof task === 'object' &&
+    !Array.isArray(task) &&
+    typeof task.title === 'string' &&
+    task.title.trim() !== '' &&
+    typeof task.description === 'string' &&
+    PRIORITIES.includes(task.priority) &&
+    typeof task.estimatedMinutes === 'number' &&
+    Number.isFinite(task.estimatedMinutes) &&
+    task.estimatedMinutes > 0
+  );
+}
+
 export default function App() {
   const [objective, setObjective] = useState('Quiero aprender React en una semana');
   const [tasks, setTasks] = useState([]);
@@ -19,10 +36,12 @@ export default function App() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'No se pudo consultar Gemini');
-      setRaw(data.rawText || '');
-      // RETO 2: reemplazar el parser de demostración por validación estricta.
-      const parsed = JSON.parse(data.rawText);
-      setTasks(Array.isArray(parsed.tasks) ? parsed.tasks : []);
+      if (!Array.isArray(data.tasks)) throw new Error('El servidor devolvió un plan con formato inválido.');
+      const validTasks = data.tasks.filter(isValidTask);
+      if (validTasks.length === 0) throw new Error('El servidor no devolvió tareas válidas.');
+      if (validTasks.length !== data.tasks.length) throw new Error('El servidor devolvió tareas con formato inválido.');
+      setTasks(validTasks);
+      setRaw(JSON.stringify({ tasks: validTasks }, null, 2));
     } catch (err) {
       setError(err.message || 'Error inesperado');
     } finally { setLoading(false); }
@@ -46,10 +65,10 @@ export default function App() {
       <section className="panel">
         <div className="section-title"><h2>Plan generado</h2><span>{tasks.length} tareas</span></div>
         {tasks.length === 0 ? <p className="muted">Las tareas aparecerán aquí después de consultar Gemini.</p> :
-          <div className="task-grid">{tasks.map((task, index) => <article className="task" key={index}>
-            <div className="task-top"><span>0{index + 1}</span><span className="priority">{task.priority || 'sin prioridad'}</span></div>
+          <div className="task-grid">{tasks.map((task, index) => <article className="task" key={`${index}-${task.title}`}>
+            <div className="task-top"><span>{String(index + 1).padStart(2, '0')}</span><span className="priority">{task.priority}</span></div>
             <h3>{task.title}</h3><p>{task.description}</p>
-            {task.estimatedMinutes && <small>{task.estimatedMinutes} min estimados</small>}
+            <small>{task.estimatedMinutes} min estimados</small>
           </article>)}</div>}
       </section>
       <section className="panel"><h2>Respuesta del modelo</h2><p className="muted">Inspecciona el resultado para resolver los retos de validación.</p><pre>{raw || 'Todavía no hay respuesta.'}</pre></section>
