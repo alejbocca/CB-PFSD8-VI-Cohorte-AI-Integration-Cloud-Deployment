@@ -25,7 +25,7 @@ export default function App() {
   const [error, setError] = useState('');
 
   async function generateTasks(event) {
-    event.preventDefault();
+    event?.preventDefault();
     if (!objective.trim()) { setError('Escribe un objetivo antes de continuar.'); return; }
     setLoading(true); setError(''); setTasks([]); setRaw('');
     try {
@@ -34,8 +34,14 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ objective }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'No se pudo consultar Gemini');
+      const responseText = await response.text();
+      let data = {};
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch {
+        throw new Error(`El servidor devolvió una respuesta ilegible (HTTP ${response.status}).`);
+      }
+      if (!response.ok) throw new Error(data.error || `No se pudo consultar Gemini (HTTP ${response.status}).`);
       if (!Array.isArray(data.tasks)) throw new Error('El servidor devolvió un plan con formato inválido.');
       const validTasks = data.tasks.filter(isValidTask);
       if (validTasks.length === 0) throw new Error('El servidor no devolvió tareas válidas.');
@@ -43,7 +49,10 @@ export default function App() {
       setTasks(validTasks);
       setRaw(JSON.stringify({ tasks: validTasks }, null, 2));
     } catch (err) {
-      setError(err.message || 'Error inesperado');
+      const message = err instanceof TypeError
+        ? 'No se pudo conectar con el servidor. Verifica que el backend esté activo y vuelve a intentarlo.'
+        : err.message || 'Error inesperado';
+      setError(message);
     } finally { setLoading(false); }
   }
 
@@ -60,7 +69,12 @@ export default function App() {
           <textarea id="objective" value={objective} onChange={e => setObjective(e.target.value)} rows="3" />
           <button disabled={loading}>{loading ? 'Consultando Gemini…' : 'Generar plan con IA'}</button>
         </form>
-        {error && <p role="alert" className="error">{error}</p>}
+        {error && <div className="error-box" role="alert">
+          <p className="error">{error}</p>
+          <button type="button" className="retry" onClick={() => generateTasks()} disabled={loading}>
+            Reintentar
+          </button>
+        </div>}
       </section>
       <section className="panel">
         <div className="section-title"><h2>Plan generado</h2><span>{tasks.length} tareas</span></div>

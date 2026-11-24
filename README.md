@@ -33,7 +33,7 @@ Abrir http://localhost:5173. Vite reenvía `/api` a `http://localhost:3001` en d
 ## Retos del taller
 1. **Prompt engineering:** mejorar `buildPrompt()` en `backend/server.js`, comparar al menos 2 variantes y documentar resultados.
 2. **Respuesta estructurada:** el backend solicita JSON con `responseMimeType` y `responseSchema`, analiza la salida y valida cada tarea antes de responder. React consume `tasks` como arreglo y muestra el error controlado del backend si la salida no cumple el contrato.
-3. **Evaluación de IA:** ejecutar al menos 5 escenarios, registrar calidad/relevancia y demostrar manejo de errores.
+3. **Evaluación de IA:** ejecutar al menos 5 escenarios, registrar calidad/relevancia y demostrar manejo de errores. Ver resultados en `docs/evaluacion-escenarios.md`.
 
 ### Contrato de respuesta (reto 2)
 

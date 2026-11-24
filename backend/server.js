@@ -2,10 +2,23 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { PRIORITIES, validateTaskPayload } from './validation.js';
+import { normalizeObjective, validateObjective } from './objective.js';
 
 const app = express();
 app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json({ limit: '20kb' }));
+
+// Un cuerpo malformado no debe devolver HTML con el stack trace de Express.
+app.use((err, req, res, next) => {
+  if (err?.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: 'El cuerpo de la solicitud no es JSON válido.' });
+  }
+  if (err?.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'La solicitud es demasiado grande (máximo 20 KB).' });
+  }
+  console.error('Unhandled request error:', err);
+  return res.status(500).json({ error: 'Error interno del servidor.' });
+});
 
 const TASK_RESPONSE_SCHEMA = {
   type: 'OBJECT',
@@ -58,9 +71,10 @@ function extractText(payload) {
 }
 
 app.post('/api/generate-tasks', async (req, res) => {
-  const objective = typeof req.body?.objective === 'string' ? req.body.objective.trim() : '';
-  if (!objective || objective.length > 1200) {
-    return res.status(400).json({ error: 'Objetivo inválido (1 a 1200 caracteres).' });
+  const objective = normalizeObjective(req.body?.objective);
+  const objectiveError = validateObjective(objective);
+  if (objectiveError) {
+    return res.status(400).json({ error: objectiveError });
   }
   if (!process.env.GEMINI_API_KEY) {
     return res.status(500).json({ error: 'Configura GEMINI_API_KEY en backend/.env' });
@@ -81,7 +95,9 @@ app.post('/api/generate-tasks', async (req, res) => {
             temperature: 0.4,
           },
         }),
-        signal: AbortSignal.timeout(30000),
+        // Gemini puede tardar ~30 s en generar un plan completo; 60 s evita
+        // abortar respuestas que sí iban a llegar.
+        signal: AbortSignal.timeout(60000),
       }
     );
 
