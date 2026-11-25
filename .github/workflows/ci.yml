@@ -1,24 +1,48 @@
-name: ReactTesting
+name: CI Frontend
+
 on:
-  push:
   pull_request:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-frontend-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
+    name: Lint y build
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./frontend
     steps:
-      - name: Descargar repositorio
+      - name: Descargar el código fuente
         uses: actions/checkout@v4
+
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
       - name: Instalar dependencias
         run: npm ci
-      - name: Compilar React
+
+      - name: Validar calidad del código con ESLint
+        run: npm run lint
+
+      - name: Compilar la aplicación React
         run: npm run build
+
+      - name: Almacenar dist como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          if-no-files-found: error
+          retention-days: 14
