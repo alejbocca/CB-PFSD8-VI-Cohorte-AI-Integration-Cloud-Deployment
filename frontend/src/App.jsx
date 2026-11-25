@@ -1,5 +1,8 @@
 import { useState } from 'react';
 
+// Error intencional para validar que el pipeline de CI detecta fallos.
+const errorDeSintaxis = ;
+
 const PRIORITIES = ['high', 'medium', 'low'];
 
 function isValidTask(task) {
