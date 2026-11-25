@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 const PRIORITIES = ['high', 'medium', 'low'];
 
-function isValidTask(task) {
+function isValidTask(tasks) {
   return Boolean(
     task &&
     typeof task === 'object' &&
