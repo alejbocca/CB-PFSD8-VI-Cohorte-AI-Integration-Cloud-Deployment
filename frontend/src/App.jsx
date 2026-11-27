@@ -57,7 +57,7 @@ export default function App() {
   }
 
   return <div className="page">
-    <header className="topbar"><div className="brandmark">CB</div><div><strong>CODING BOOTCAMP</strong><span>ESPOL · AI Integration Lab</span></div><span className="tag">LAB 01</span></header>
+    <header className="topbar"><div className="brandmark">CB</div><div><strong>CODING BOOTCAMP</strong><span>ESPOL · AI Integration Lab</span></div><span className="tag">DEPLOY CI/CD</span></header>
     <main className="container">
       <div className="eyebrow">INTEGRACIÓN DE INTELIGENCIA ARTIFICIAL</div>
       <h1>De una idea a un plan con Gemini</h1>
