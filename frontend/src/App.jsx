@@ -86,7 +86,7 @@ export default function App() {
           </article>)}</div>}
       </section>
       <section className="panel"><h2>Respuesta del modelo</h2><p className="muted">Inspecciona el resultado para resolver los retos de validación.</p><pre>{raw || 'Todavía no hay respuesta.'}</pre></section>
-      <footer>CODING BOOTCAMP · ESPOL · Material didáctico de laboratorio</footer>
+      <footer>CODING BOOTCAMP · ESPOL · CI/CD VALIDADO</footer>
     </main>
   </div>;
 }
