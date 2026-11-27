@@ -1,6 +1,8 @@
 import { useState } from 'react';
 
 const PRIORITIES = ['high', 'medium', 'low'];
+// En producción apunta a la Lambda; en local usa el proxy de Vite hacia el backend Express.
+const API_URL = import.meta.env.VITE_API_URL || '/api/generate-tasks';
 
 function isValidTask(task) {
   return Boolean(
@@ -29,7 +31,7 @@ export default function App() {
     if (!objective.trim()) { setError('Escribe un objetivo antes de continuar.'); return; }
     setLoading(true); setError(''); setTasks([]); setRaw('');
     try {
-      const response = await fetch('/api/generate-tasks', {
+      const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ objective }),
